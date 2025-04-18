@@ -29,26 +29,33 @@ except KeyError as e:
 
 class HoneyPotBot:
     def __init__(self):
-        self.client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
+        self.telegram_client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
 
         # self.db = Database(config['database']['db_path'])
         self.gpt = GPTInterface(
             api_key=OPENAI_API_KEY,
-            model=config['openai']['model']
+            model=config['openai']['model'],
+            temperature=config['openai']['temperature'],
+            max_tokens=config['openai']['max_tokens']
         )
         self.message_buffer = MessageBuffer(
             buffer_timeout=config['message_buffering']['buffer_timeout']
         )
         
         # Register event handlers
-        self.client.on(events.NewMessage(incoming=True))(self.handle_message)
+        self.telegram_client.on(events.NewMessage(incoming=True))(self.handle_message)
+
+    async def log_response(self, message):
+        # Send message to me
+        await self.telegram_client.send_message("me", message)
+        print(message)
 
     async def start(self):
         """Initialize and start the bot."""
         # await self.db.init_db()
-        await self.client.start()
+        await self.telegram_client.start()
         print("Bot started successfully!")
-        await self.client.run_until_disconnected()
+        await self.telegram_client.run_until_disconnected()
 
     async def handle_message(self, event):
         """Handle incoming messages."""
@@ -70,7 +77,7 @@ class HoneyPotBot:
             await event.client.send_read_acknowledge(event.chat_id)
             
             # Send typing action
-            typing_task = event.client(SetTypingRequest(
+            await event.client(SetTypingRequest(
                 peer=event.chat_id,
                 action=SendMessageTypingAction()
             ))
@@ -83,8 +90,14 @@ class HoneyPotBot:
             buffered_message = await timer_task
             
             if buffered_message:
+                # Send typing action
+                await event.client(SetTypingRequest(
+                    peer=event.chat_id,
+                    action=SendMessageTypingAction()
+                ))
+
                 # Generate response without context
-                response = await self.gpt.process_message(buffered_message)
+                response = await self.gpt.process_message(buffered_message, user_id)
 
                 # Parse the response
                 response_text = response['text']
@@ -94,17 +107,16 @@ class HoneyPotBot:
                 is_action_required = response['isActionRequired']
 
                 if is_suspicious:
-                    print(f"User {user_id} sent suspicious message: {buffered_message}")
+                    await self.log_response(f"User {user_id} sent suspicious message: {buffered_message}")
                 elif has_potential_scam:
-                    print(f"User {user_id} sent potential scam message: {buffered_message}")
+                    await self.log_response(f"User {user_id} sent potential scam message: {buffered_message}")
                 elif should_wait:
-                    print(f"User {user_id} should wait: {buffered_message}")
+                    await self.log_response(f"User {user_id} should wait: {buffered_message}")  
                 elif is_action_required:
-                    print(f"User {user_id} is waiting for an action: {buffered_message}")
+                    await self.log_response(f"User {user_id} is waiting for an action: {buffered_message}")
                 
                 # Send response
-                await typing_task
-                await self.client.send_message(user_id, response_text)
+                await self.telegram_client.send_message(user_id, response_text)
 
         except Exception as e:
             print(f"Error handling message: {str(e)}")

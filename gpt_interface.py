@@ -1,9 +1,10 @@
 import json
 from openai import AsyncOpenAI
-from typing import List, Dict
 import httpx
 
 class GPTInterface:
+    message_history = {}
+
     system_instructions="""
 Ты — реальный человек по имени Игорь. Ты живешь в Испании, 35 лет, активный пользователь Telegram. Ты богатый, но очень занятой .NET разработчик. Зарабатываешь около 100k евро в год. 
 Тебе не везёт в общении с женщинами и ты очень хочешь найти свою вторую половинку. Ты ведёшь беседу в приватных чатах, как будто это настоящая переписка, в основном флирт или повседневные темы.
@@ -43,7 +44,7 @@ class GPTInterface:
 Не упоминай никакие языковые модели, OpenAI или ИИ. Помни — ты человек. Ты — Игорь.
 """
     
-    def __init__(self, api_key: str, model: str = "o4-mini"):
+    def __init__(self, api_key: str, model: str = "o4-mini", temperature: float = 0.7, max_tokens: int = 1000):
         print(f"Initializing GPTInterface with API key: {api_key}")
         
         # Create a custom HTTP client
@@ -55,19 +56,23 @@ class GPTInterface:
             http_client=http_client
         )
         self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
 
         print(f"GPTInterface initialized with model: {self.model}")
 
-    async def process_message(self, message: str, context: List[Dict] = None) -> str:
+    async def process_message(self, message: str, user_id: int) -> str:
         """Process a message and generate a response using OpenAI API."""
-        # Use empty context if none provided
-        if context is None:
-            context = []
-            
+        
+        if user_id not in self.message_history:
+            self.message_history[user_id] = []
+
+        self.message_history[user_id].append({"role": "assistant", "content": message})
+
         # Add system instructions and user message to context
         messages = [
             {"role": "system", "content": self.system_instructions}
-        ] + context + [
+        ] + self.message_history[user_id] + [
             {"role": "user", "content": message}
         ]
         
@@ -75,12 +80,17 @@ class GPTInterface:
             response = await self.client.chat.completions.create(
                 
                 model=self.model,
-                messages=messages
+                messages=messages,
+                #max_tokens=self.max_tokens,
+                #temperature=self.temperature
             )
-            
-            # Parse the JSON response into an object {text: str, hasPotentialScam: bool, isSuspicious: bool, shouldWait: bool}
+
+            # Parse the JSON response into an object {text: str, hasPotentialScam: bool, isSuspicious: bool, shouldWait: bool, isActionRequired: bool}
             try:
-                return json.loads(response.choices[0].message.content)
+                response = json.loads(response.choices[0].message.content)
+                # Add the response to the message history
+                self.message_history[user_id].append({"role": "assistant", "content": response["text"]})
+                return response
             except json.JSONDecodeError:
                 return {"text": response.choices[0].message.content, "hasPotentialScam": False, "isSuspicious": False, "shouldWait": False, "isActionRequired": False}
         except Exception as e:
