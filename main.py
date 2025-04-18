@@ -1,9 +1,10 @@
-from datetime import datetime
-import os
 import asyncio
 import json
+import random
+import time
 from telethon import TelegramClient, events
-from telethon.tl.types import User
+from telethon.tl.functions.messages import SetTypingRequest
+from telethon.tl.types import SendMessageTypingAction
 # from db import Database
 from gpt_interface import GPTInterface
 from message_buffer import MessageBuffer
@@ -29,7 +30,6 @@ except KeyError as e:
 class HoneyPotBot:
     def __init__(self):
         self.client = TelegramClient(SESSION_NAME, API_ID, API_HASH)
-        self.client.send_message('me', 'Hello, myself!')
 
         # self.db = Database(config['database']['db_path'])
         self.gpt = GPTInterface(
@@ -63,7 +63,18 @@ class HoneyPotBot:
             # Skip if no message text
             if not message:
                 return
+            
+            time.sleep(random.randint(1, 3))
 
+            # Acknowledge the message
+            await event.client.send_read_acknowledge(event.chat_id)
+            
+            # Send typing action
+            typing_task = event.client(SetTypingRequest(
+                peer=event.chat_id,
+                action=SendMessageTypingAction()
+            ))
+            
             # Add message to buffer and get the timer task
             self.message_buffer.add_message(user_id, message)
             timer_task = self.message_buffer.timers[user_id]
@@ -74,9 +85,26 @@ class HoneyPotBot:
             if buffered_message:
                 # Generate response without context
                 response = await self.gpt.process_message(buffered_message)
+
+                # Parse the response
+                response_text = response['text']
+                has_potential_scam = response['hasPotentialScam']
+                is_suspicious = response['isSuspicious']
+                should_wait = response['shouldWait']
+                is_action_required = response['isActionRequired']
+
+                if is_suspicious:
+                    print(f"User {user_id} sent suspicious message: {buffered_message}")
+                elif has_potential_scam:
+                    print(f"User {user_id} sent potential scam message: {buffered_message}")
+                elif should_wait:
+                    print(f"User {user_id} should wait: {buffered_message}")
+                elif is_action_required:
+                    print(f"User {user_id} is waiting for an action: {buffered_message}")
                 
                 # Send response
-                await self.client.send_message(user_id, response)
+                await typing_task
+                await self.client.send_message(user_id, response_text)
 
         except Exception as e:
             print(f"Error handling message: {str(e)}")
