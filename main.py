@@ -9,6 +9,12 @@ from telethon.tl.types import SendMessageTypingAction
 from gpt_interface import GPTInterface
 from message_buffer import MessageBuffer
 
+"""
+TODO:
+- Add logging
+- Diferentiate btw users
+"""
+
 # Load configuration
 try:
     with open('config.json', 'r') as f:
@@ -54,7 +60,7 @@ class HoneyPotBot:
         """Initialize and start the bot."""
         # await self.db.init_db()
         await self.telegram_client.start()
-        print("Bot started successfully!")
+        print("Honeypot bot started successfully!")
         await self.telegram_client.run_until_disconnected()
 
     async def handle_message(self, event):
