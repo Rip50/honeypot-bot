@@ -1,3 +1,4 @@
+import os
 import asyncio
 import json
 import random
@@ -22,7 +23,7 @@ try:
     API_ID = int(config['telegram']['api_id'])
     API_HASH = config['telegram']['api_hash']
     OPENAI_API_KEY = config['openai']['api_key']
-    SESSION_NAME = config['telegram']['session_name']
+    SESSION_NAME = os.path.join('sessions', config['telegram']['session_name'])
 except FileNotFoundError:
     print("Error: config.json not found in project root")
     exit(1)

@@ -7,6 +7,11 @@ source /opt/honeypot-bot/venv/bin/activate
 # Install dependencies
 pip install -r /opt/honeypot-bot/requirements.txt
 
+# Create and set permissions for session directory
+mkdir -p /opt/honeypot-bot/sessions
+chown -R ec2-user:ec2-user /opt/honeypot-bot/sessions
+chmod 700 /opt/honeypot-bot/sessions
+
 # Create systemd service
 cat > /etc/systemd/system/honeypot-bot.service << 'SERVICE'
 [Unit]
