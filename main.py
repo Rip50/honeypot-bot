@@ -6,6 +6,7 @@ import time
 from telethon import TelegramClient, events
 from telethon.tl.functions.messages import SetTypingRequest
 from telethon.tl.types import SendMessageTypingAction
+from telethon.tl.types import User
 # from db import Database
 from gpt_interface import GPTInterface
 from message_buffer import MessageBuffer
@@ -23,7 +24,12 @@ try:
     API_ID = int(config['telegram']['api_id'])
     API_HASH = config['telegram']['api_hash']
     OPENAI_API_KEY = config['openai']['api_key']
-    SESSION_NAME = os.path.join('sessions', config['telegram']['session_name'])
+    
+    # Create sessions directory if it doesn't exist
+    SESSIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sessions')
+    os.makedirs(SESSIONS_DIR, exist_ok=True)
+    SESSION_NAME = os.path.join(SESSIONS_DIR, config['telegram']['session_name'])
+    
 except FileNotFoundError:
     print("Error: config.json not found in project root")
     exit(1)
