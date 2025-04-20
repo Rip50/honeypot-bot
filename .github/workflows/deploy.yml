@@ -36,7 +36,7 @@ jobs:
         id: deploy
         run: |
             aws deploy create-deployment \
-            --application-name honeypot-bot \ 
+            --application-name honeypot-bot \
             --deployment-group-name honeypot-bot-staging \
             --deployment-config-name CodeDeployDefault.AllAtOnce \
             --github-location repository=${{ github.repository }},commitId=${{ github.sha }}
