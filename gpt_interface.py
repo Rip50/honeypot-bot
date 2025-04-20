@@ -78,8 +78,8 @@ class GPTInterface:
             response = await self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                temperature=self.temperature,
-                max_tokens=self.max_tokens
+                #max_tokens=self.max_tokens,
+                #temperature=self.temperature
             )
 
             # Parse the JSON response into an object {text: str, hasPotentialScam: bool, isSuspicious: bool, shouldWait: bool, isActionRequired: bool}

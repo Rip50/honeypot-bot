@@ -1,0 +1,36 @@
+name: Deploy HoneyPot Bot
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+env:
+  AWS_REGION: eu-south-2
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          role-to-assume: arn:aws:iam::533267329606:role/GitHubAction-AssumeRoleWithAction
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Sts GetCallerIdentity
+        run: |
+          aws sts get-caller-identity
+
+          - name: Create CodeDeploy Deployment
+          id: deploy
+          run: |
+            aws deploy create-deployment \
+            --application-name honeypot-bot \ 
+            --deployment-group-name honeypot-bot-staging \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --github-location repository=${{ github.repository }},commitId=${{ github.sha }}

@@ -13,6 +13,7 @@ from message_buffer import MessageBuffer
 
 """
 TODO:
+- Give ec2-user permissions to write to the sessions directory and run the bot
 - Add logging
 - Diferentiate btw users
 """
