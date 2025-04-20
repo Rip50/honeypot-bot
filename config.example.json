@@ -1,0 +1,23 @@
+{
+    "telegram": {
+        "api_id": "api_id",
+        "api_hash": "api_hash",
+        "session_name": "honeypot"
+    },
+    "openai": {
+        "api_key": "api_key",
+        "model": "o4-mini",
+        "temperature": 0.7,
+        "max_tokens": 300,
+        "max_history_size": 40,
+        "system_instructions": "Your instructions here"
+    },
+    "message_buffering": {
+        "buffer_timeout": 7
+    },
+    "database": {
+        "db_path": "messages.db",
+        "cleanup_days": 7,
+        "max_history_messages": 10
+    }
+} 

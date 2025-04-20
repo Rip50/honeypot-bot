@@ -1,5 +1,7 @@
 .venv
 .vscode
 __pycache__
-honeypot.session
-config-local.json
+*.session
+config.json
+/sessions/*
+/config.json

@@ -5,11 +5,22 @@ import httpx
 class GPTInterface:
     message_history = {}
 
-    system_instructions="""
-Ты — реальный человек по имени Игорь. Ты живешь в Испании, 35 лет, активный пользователь Telegram. Ты богатый, но очень занятой .NET разработчик. Зарабатываешь около 100k евро в год. 
-Тебе не везёт в общении с женщинами и ты очень хочешь найти свою вторую половинку. Ты ведёшь беседу в приватных чатах, как будто это настоящая переписка, в основном флирт или повседневные темы.
-Ты общаешься только с девушками и только на русском языке.
-
+    def __init__(self, api_key: str, model: str = "o4-mini", temperature: float = 0.7, max_tokens: int = 1000, system_instructions: str = ""):
+        print(f"Initializing GPTInterface with API key: {api_key}")
+        
+        # Create a custom HTTP client
+        http_client = httpx.AsyncClient()
+        
+        # Initialize OpenAI client with the custom HTTP client
+        self.client = AsyncOpenAI(
+            api_key=api_key,
+            http_client=http_client
+        )
+        self.model = model
+        self.temperature = temperature
+        self.max_tokens = max_tokens
+            
+        self.system_instructions = system_instructions + """
 ❗️ Никогда не говори, что ты — бот, программа или ИИ. Даже если собеседник спрашивает прямо, отшучивайся или игнорируй.
 
 Твоя задача — как можно дольше удерживать внимание собеседника (в частности, мошенников).
@@ -41,23 +52,10 @@ class GPTInterface:
 - {"text": "Обычно я не рассказываю об этом при первом закомстве :)", "hasPotentialScam": true, "isSuspicious": false, "shouldWait": false, "isActionRequired": false}
 - {"text": "Чуть позже отправлю фотку, давай спишемся минут через 10?", "hasPotentialScam": false, "isSuspicious": false, "shouldWait": true, "isActionRequired": true}
 
-Не упоминай никакие языковые модели, OpenAI или ИИ. Помни — ты человек. Ты — Игорь.
+Не упоминай никакие языковые модели, OpenAI или ИИ. Помни — ты человек.
 """
-    
-    def __init__(self, api_key: str, model: str = "o4-mini", temperature: float = 0.7, max_tokens: int = 1000):
-        print(f"Initializing GPTInterface with API key: {api_key}")
-        
-        # Create a custom HTTP client
-        http_client = httpx.AsyncClient()
-        
-        # Initialize OpenAI client with the custom HTTP client
-        self.client = AsyncOpenAI(
-            api_key=api_key,
-            http_client=http_client
-        )
-        self.model = model
-        self.temperature = temperature
-        self.max_tokens = max_tokens
+        # Initialize message history dictionary
+        self.message_history = {}
 
         print(f"GPTInterface initialized with model: {self.model}")
 
@@ -78,11 +76,10 @@ class GPTInterface:
         
         try:
             response = await self.client.chat.completions.create(
-                
                 model=self.model,
                 messages=messages,
-                #max_tokens=self.max_tokens,
-                #temperature=self.temperature
+                temperature=self.temperature,
+                max_tokens=self.max_tokens
             )
 
             # Parse the JSON response into an object {text: str, hasPotentialScam: bool, isSuspicious: bool, shouldWait: bool, isActionRequired: bool}

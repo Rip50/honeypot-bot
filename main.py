@@ -19,11 +19,10 @@ TODO:
 
 # Load configuration
 try:
-    with open('config.json', 'r') as f:
+    with open('config.json', 'r', encoding='utf-8') as f:
         config = json.load(f)
     API_ID = int(config['telegram']['api_id'])
     API_HASH = config['telegram']['api_hash']
-    OPENAI_API_KEY = config['openai']['api_key']
     
     # Create sessions directory if it doesn't exist
     SESSIONS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'sessions')
@@ -46,10 +45,11 @@ class HoneyPotBot:
 
         # self.db = Database(config['database']['db_path'])
         self.gpt = GPTInterface(
-            api_key=OPENAI_API_KEY,
+            api_key=config['openai']['api_key'],
             model=config['openai']['model'],
             temperature=config['openai']['temperature'],
-            max_tokens=config['openai']['max_tokens']
+            max_tokens=config['openai']['max_tokens'],
+            system_instructions=config['openai']['system_instructions']
         )
         self.message_buffer = MessageBuffer(
             buffer_timeout=config['message_buffering']['buffer_timeout']
