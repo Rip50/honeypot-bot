@@ -30,6 +30,8 @@ try:
     os.makedirs(SESSIONS_DIR, exist_ok=True)
     SESSION_NAME = os.path.join(SESSIONS_DIR, config['telegram']['session_name'])
     
+    print(f"SESSION_NAME: {SESSION_NAME}")
+    
 except FileNotFoundError:
     print("Error: config.json not found in project root")
     exit(1)
