@@ -17,7 +17,7 @@
     },
     "database": {
         "db_path": "messages.db",
-        "cleanup_days": 7,
+        "cleanup_days": 6,
         "max_history_messages": 10
     }
 } 
