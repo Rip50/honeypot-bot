@@ -23,6 +23,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
+            # TODO: Check provider configuration
           role-to-assume: arn:aws:iam::533267329606:role/GitHubAction-AssumeRoleWithAction
           role-session-name: GitHub_to_AWS_via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
@@ -31,9 +32,9 @@ jobs:
         run: |
           aws sts get-caller-identity
 
-          - name: Create CodeDeploy Deployment
-          id: deploy
-          run: |
+      - name: Create CodeDeploy Deployment
+        id: deploy
+        run: |
             aws deploy create-deployment \
             --application-name honeypot-bot \ 
             --deployment-group-name honeypot-bot-staging \
