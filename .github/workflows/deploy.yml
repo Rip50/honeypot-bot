@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  AWS_REGION: eu-south-2
+  AWS_REGION: eu-north-1
 
 # Permission can be added at job level or workflow level    
 permissions:
